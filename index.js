@@ -9,7 +9,7 @@ const commandsBot = BOT.CMDS;
 
 // Crea una instancia del bot
 const bot = new TelegramBot(BOT.TOKEN.TLGM, { polling: true });
-bot.getMyCommands().then( ans => console.log(ans) );
+// bot.getMyCommands().then( ans => console.log(ans) );
 
 // Escucha los mensajes entrantes
 bot.on('message', async (message) => {
@@ -35,13 +35,13 @@ bot.on('message', async (message) => {
    * If command is already...
    * And estatus is true, send menssage that command is not active
   */
-  if(!cmd.status) return bot.sendssage(chat.id, `Sorry, el comando **${cmd.name}** no está activo :c`).then((m)=>{
+  if(!cmd.status) return bot.sendssage(chat.id, `Sorry, el comando **${cmd.name}** no está activo 😔`).then((m)=>{
     console.warn(BOT.console.warn + "El comando " + cmd.name+ " no está activo!");
   });
 
   cmd.run(bot, message, ...args)
 
-  console.log(command, args);
+  // console.log(command, args);
 
 });
 
