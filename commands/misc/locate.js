@@ -24,16 +24,16 @@ module.exports = {
     * @param { Array<String> } ...args
     * @returns Promise
     */
-    run: async (bot, message, ...args) => {
-        const from = message.from;
-        const chat = message.chat;
+    run: async (ctx, msg, ...args) => {
+        const from = msg.from;
+        const chat = msg.chat;
 
-        const apiKey = BOT.TOKEN.GMAPS;
-        const uri = BOT.URI.GMAPS;
+        const apiKey = BOT.TOKEN.GPLACES;
+        const uriPlaces = BOT.URI.GPLACES;
         const scope = ['place_id','formatted_address', 'name', 'rating', 'opening_hours', 'geometry', 'photo'];
         // const qq = "Universidad tecnológica de Pereira";
         const qq = args.join(" ");
-        if ( !qq ) return bot.sendMessage(chat.id, "No me escribiste qué buscar.");
+        if ( !qq ) return ctx.reply("No me escribiste qué buscar.");
 
         async function mapsQuery(query, scopes) {
             scopes = scopes.join(",");
@@ -48,16 +48,19 @@ module.exports = {
 				"input": encodedQuery
 			  }
 
-            const url = `${uri}findplacefromtext/json?${constructParams(paramsObj)}`
+            const url = `${uriPlaces}findplacefromtext/json?${constructParams(paramsObj)}`
             
             try {
               // @ts-ignore
               const response = await fetch(url);
               let result = await response.text();
+			//   console.log(response);
               result = result.trim();
               result = JSON.parse(result);
 
               if ( response.status !== 200) return console.error(response);
+
+			  if ( result.error_message ) return console.error(result.error_message);
 
               // console.log(result);
               return result;
@@ -65,46 +68,59 @@ module.exports = {
               console.error('Error: ', error);
               throw error;
             }
-          }
+        }
+
+		async function photoQuery(photo_reference, maxwidth, maxheight) {
+            maxwidth = maxwidth || 400;
+
+			const paramsObj = {
+				"maxwidth": 400,
+				"photo_reference": photo_reference,
+                "key": apiKey,
+			}
+            // Ajustar para cuando haya un valor en height, agregar al objeto JSON
+            // if (maxheight) 
+
+            const url = `${uriPlaces}photo?${constructParams(paramsObj)}`
+            
+            try {
+            	// @ts-ignore
+            	const response = await fetch(url);
+				// console.log("RES:",response);
+            	let urlPhoto = response.url;
+
+            	if ( response.status !== 200) return console.error(response);
+
+				if ( result.error_message ) return console.error(result.error_message);
+
+              	// console.log("RESULT", urlPhoto);
+              	return urlPhoto;
+            } catch (error) {
+              	console.error('Verifica: ', error);
+              	throw error;
+            }
+        }
 
         let result;
         try {
             result = await mapsQuery(qq, scope);
             result = result.candidates[0];
-            console.log(result); 
+            // console.log(result); 
         } catch (error) {
             console.error('Error:', error);
         }
-
         const loc = result.geometry.location
 
-        bot.sendVenue(chat.id, loc.lat, loc.lng, result.name, result.formatted_address);
+        ctx.replyWithVenue(loc.lat, loc.lng, result.name, result.formatted_address);
 
-        /*
-        async function photosQuery() {
-          // const encodedQuery = encodeURIComponent(query);
-          const photoReference = result.photos[0].photo_reference;
+		// console.log("PHOTO:",result.photos[0].photo_reference);
+		let photo;
+		try {
+			photo = await photoQuery(result.photos[0].photo_reference);
+		} catch (err) {
+			console.error('Error:', err);
+		}
 
-          const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoReference}&key=${apiKey}`
-          
-    
-          try {
-            // @ts-ignore
-            const response = await fetch(url);
-            const result = await response.text();
-            return result.trim();
-          } catch (error) {
-            console.error('Error:', error);
-            throw error;
-          }
-        }
-
-        Revisar como enviar la foto a telegram
-        
-        photosQuery().then( ans => {
-          // console.log(ans);
-          bot.sendPhoto(chat.id, ans); 
-        }).catch( err => console.log(err));
-        */
+		ctx.replyWithPhoto(photo, "Photo from place");
     }
 }

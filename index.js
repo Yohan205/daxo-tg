@@ -2,46 +2,66 @@
 const fs = require('fs');
 const path = require('path');
 const TelegramBot = require('node-telegram-bot-api');
+const { Telegraf } = require('telegraf');
+const { message } = require('telegraf/filters');
 const { BOT } = require('./setting/config');
 
 
 const commandsBot = BOT.CMDS;
 
 // Crea una instancia del bot
-const bot = new TelegramBot(BOT.TOKEN.TLGM, { polling: true });
+const bot = new Telegraf(BOT.TOKEN.TLGM);
+// const bot = new TelegramBot(BOT.TOKEN.TLGM, { polling: true });
 // bot.getMyCommands().then( ans => console.log(ans) );
 
+// On start message
+bot.start((ctx) => ctx.reply("Hello, world!"));
+
+// On help message
+bot.help(ctx => ctx.reply("Hello, can I help you?"));
+
+// bot.command('test', (ctx) => {
+//   ctx.reply("Hi there");
+// })
+
 // Escucha los mensajes entrantes
-bot.on('message', async (message) => {
-  let userBot = await bot.getMe(), usernameBot;
-  usernameBot = "@"+userBot.username;
+bot.on(message('text'), async (ctx) => {
+  const msg =ctx.update.message;
+  let userBot = ctx.botInfo;
+  let usernameBot = "@"+userBot.username;
 
-  const chat = message.chat;
-  const msg = message.text;
-  const from = message.from;
+  const chat = msg.chat;
+  const text = msg.text;
+  const from = msg.from;
 
-  if ( !msg ) return testLog(message, "mensajes");
+  let mssg = {
+    chat,
+    text,
+    from
+  }
+
+  // testLog(mssg, "CONTEXT");
   if ( from.is_bot == true ) return;
 
-  // console.log(msg);
-
-  let [command, ...args] = msg.slice(1).trim().split(/\s+/);
+  let [command, ...args] = text.slice(1).trim().split(/\s+/);
   command = command.includes(usernameBot)? command.replace(usernameBot, "") : command;
 
   const cmd = commandsBot.get(command)
-  if(!cmd) return console.log(command); // If not found command... return
+  // If not found command... return
+  if(!cmd) return console.log(command); 
 
+  console.log(command);
   /**
    * If command is already...
-   * And estatus is true, send menssage that command is not active
+   * And estatus is true, send a menssage saying that command is not active
   */
-  if(!cmd.status) return bot.sendssage(chat.id, `Sorry, el comando **${cmd.name}** no está activo 😔`).then((m)=>{
+ 
+  if(!cmd.status) return ctx.sendMessage(chat.id, `Sorry, el comando **${cmd.name}** no está activo 😔`).then((m)=>{
     console.warn(BOT.console.warn + "El comando " + cmd.name+ " no está activo!");
   });
 
-  cmd.run(bot, message, ...args)
-
-  // console.log(command, args);
+  // bot.command(cmd.name, cmd.run(ctx, msg, ...args));
+  cmd.run(ctx, msg, ...args);
 
 });
 
@@ -56,6 +76,7 @@ for (const folders of commands) {
     }
 }
 
+bot.launch();
 console.log("Bot is Ready!");
 
 function testLog(test, name) {

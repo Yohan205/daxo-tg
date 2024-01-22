@@ -21,10 +21,10 @@ module.exports = {
         TOKEN: {
             TLGM: process.env.TOKEN_TLGM
             ,
-            GMAPS: process.env.TOKEN_GMAPS,
+            GPLACES: process.env.TOKEN_GMAPS,
         },
         URI: {
-            GMAPS: "https://maps.googleapis.com/maps/api/place/"
+            GPLACES: "https://maps.googleapis.com/maps/api/place/"
         },
         CMDS,
         console: {

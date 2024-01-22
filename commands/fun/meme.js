@@ -26,11 +26,11 @@ module.exports = {
         const noFound = `Sorry 😅, no logré encontrar memes en este momento 😕\nVuelve a intentarlo`
 
         meme(memES[random]).then( data => {
-            if (!data) return bot.sendMessage(chat.id, noFound);
+            if (!data) return bot.reply(noFound);
             console.log(data);
-            bot.sendPhoto(chat.id, data.url, {}, { filename: data.title});
+            bot.replyWithPhoto(data.url, {}, { filename: data.title});
         }).catch(err => {
-            bot.sendMessage(chat.id, noFound); console.error("Er:"+err);
+            bot.reply(noFound); console.error("Er:"+err);
         });
     }
 }
