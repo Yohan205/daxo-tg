@@ -19,8 +19,12 @@ const arrayCmds = [
 module.exports = {
     BOT:{
         TOKEN: {
-            TLGM: process.env.TOKEN_TLGM,
-            GMAPS: process.env.TOKEN_GMAPS,
+            TLGM: process.env.TOKEN_TLGM
+            ,
+            GPLACES: process.env.TOKEN_GMAPS,
+        },
+        URI: {
+            GPLACES: "https://maps.googleapis.com/maps/api/place/"
         },
         CMDS,
         console: {
